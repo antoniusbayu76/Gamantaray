@@ -7,6 +7,7 @@ while True :
     status, img = cap1.read()
 
     imgGry = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #daidiahodqho
 
     ret , thrash = cv2.threshold(imgGry, 130 , 255, cv2.CHAIN_APPROX_NONE)
     contours , hierarchy = cv2.findContours(thrash, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
