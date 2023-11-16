@@ -29,8 +29,8 @@ batasLuasBawahHijau = 200
 port = '/dev/ttyUSB0'  #############################
 bautRate = 9600
 
-asalVideo = 'D:\Resources/1 Juni_raw.mp4'
-scaling = 1
+asalVideo = 'D:\Resources/Copy of WIN_20221027_17_04_03_Pro.mp4'
+scaling = 0.5
 
 areaLurus = 20
 areaBelokTipis = 20
@@ -291,7 +291,7 @@ while True:
     cv2.imshow('raw image', img)
     # cv2.imshow('result', result)
     cv2.imshow('resultp', maskFinal)
-    time.sleep(0.05)
+    # time.sleep(0.05)
 
 
     ##Ngirim data ke arduino
