@@ -255,7 +255,7 @@ while True:
     cv2.drawContours(img, contours2, -1, (255,255,255),1)
 
 
-    ##Garis & lingkaran tengah
+    # Garis & lingkaran tengah
     cv2.line(img, (img.shape[1]//2,0), (img.shape[1]//2,img.shape[0]), (0,0,255), thickness=2) ###
     cv2.line(img, (cxM,cyM), (cxH,cyH), (255,255,255), thickness=2)
     cxDOT = (cxH + cxM) // 2
@@ -278,9 +278,9 @@ while True:
     cv2.putText(img, 'e', (img.shape[1]//2 + ((batasBelokBesar['+kanan']+batasBelokTipis['+kanan'])//2) , img.shape[0]-20), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (255,255,255), thickness=1) ###
 
 
-    ##jarak sumbu x lingkaran, ke tengah
+    #jarak sumbu x lingkaran, ke tengah
     cx = cxDOT - img.shape[1]/2
-    #print(cx)
+    print(cx)
 
 
 
@@ -289,9 +289,9 @@ while True:
     cv2.imshow('raw image', img)
     cv2.imshow('merah', maskRed)
     cv2.imshow('hijau', maskGreen)
-    # cv2.imshow('result', result)
-    # cv2.imshow('resultp', maskFinal)
-    # time.sleep(0.05)
+    cv2.imshow('result', result)
+    cv2.imshow('resultp', maskFinal)
+    time.sleep(0.05)
 
 
     ##Ngirim data ke arduino
