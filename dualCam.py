@@ -1,3 +1,5 @@
+python your_script_name.py --weights yolov7.pt --source 0 1 --img-size 640 --conf-thres 0.25 --iou-thres 0.45 --device 0 --view-img --save-txt
+
 import argparse
 import time
 from pathlib import Path
