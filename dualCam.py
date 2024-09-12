@@ -30,8 +30,8 @@ def detect(save_img=False):
 
     # Initialize
     set_logging()
-    device = select_device(opt.device)
-    half = device.type != 'cpu'  # half precision only supported on CUDA
+    device = select_device('cpu')  # force CPU
+    half = False  # disable half precision
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
@@ -42,7 +42,7 @@ def detect(save_img=False):
         model = TracedModel(model, device, opt.img_size)
 
     if half:
-        model.half()  # to FP16
+        model.half()  # to FP16 (not used on CPU)
 
     # Second-stage classifier
     classify = False
@@ -51,12 +51,9 @@ def detect(save_img=False):
         modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model']).to(device).eval()
 
     # Set Dataloader
-    vid_path, vid_writer = None, None
     datasets = []
-    for source, webcam in zip(sources, webcams):
-        if webcam:
-            view_img = check_imshow()
-            cudnn.benchmark = True  # set True to speed up constant image size inference
+    for source in sources:
+        if source.isnumeric() or source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://')):
             datasets.append(LoadStreams(source, img_size=imgsz, stride=stride))
         else:
             datasets.append(LoadImages(source, img_size=imgsz, stride=stride))
@@ -167,6 +164,7 @@ def detect(save_img=False):
         #print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
+
 
 
 if __name__ == '__main__':
