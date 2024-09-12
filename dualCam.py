@@ -69,7 +69,7 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
-    for dataset in datasets:
+    for dataset_idx, dataset in enumerate(datasets):
         for path, img, im0s, vid_cap in dataset:
             img = torch.from_numpy(img).to(device)
             img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -136,7 +136,8 @@ def detect(save_img=False):
 
                 # Stream results
                 if view_img:
-                    cv2.imshow(str(p), im0)
+                    window_name = f'Camera {dataset_idx + 1}'
+                    cv2.imshow(window_name, im0)
                     cv2.waitKey(1)  # 1 millisecond
 
                 # Save results (image with detections)
@@ -164,6 +165,7 @@ def detect(save_img=False):
         #print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
+
 
 
 
