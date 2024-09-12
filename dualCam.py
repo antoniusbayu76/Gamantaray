@@ -18,9 +18,11 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized,
 
 
 def detect(save_img=False):
-    source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
-    save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
-    webcam = any(src.isnumeric() or src.endswith('.txt') or src.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://')) for src in source)
+    sources = opt.source
+    weights, view_img, save_txt, imgsz, trace = opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
+    save_img = not opt.nosave and not any(source.endswith('.txt') for source in sources)  # save inference images
+    webcams = [source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
+        ('rtsp://', 'rtmp://', 'http://', 'https://')) for source in sources]
 
     # Directories
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
@@ -50,12 +52,14 @@ def detect(save_img=False):
 
     # Set Dataloader
     vid_path, vid_writer = None, None
-    if webcam:
-        view_img = check_imshow()
-        cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride)
-    else:
-        dataset = LoadImages(source, img_size=imgsz, stride=stride)
+    datasets = []
+    for source, webcam in zip(sources, webcams):
+        if webcam:
+            view_img = check_imshow()
+            cudnn.benchmark = True  # set True to speed up constant image size inference
+            datasets.append(LoadStreams(source, img_size=imgsz, stride=stride))
+        else:
+            datasets.append(LoadImages(source, img_size=imgsz, stride=stride))
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -68,8 +72,8 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
-    for batch in dataset:  # For each batch from LoadStreams
-        for path, img, im0s, vid_cap in batch:
+    for dataset in datasets:
+        for path, img, im0s, vid_cap in dataset:
             img = torch.from_numpy(img).to(device)
             img = img.half() if half else img.float()  # uint8 to fp16/32
             img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -100,7 +104,7 @@ def detect(save_img=False):
 
             # Process detections
             for i, det in enumerate(pred):  # detections per image
-                if webcam:  # batch_size >= 1
+                if isinstance(dataset, LoadStreams):  # batch_size >= 1
                     p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
                 else:
                     p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
@@ -163,6 +167,7 @@ def detect(save_img=False):
         #print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
