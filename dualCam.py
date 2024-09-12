@@ -1,10 +1,12 @@
 import cv2
 import torch
 import numpy as np
-from yolov7.models.experimental import attempt_load
-from yolov7.utils.general import non_max_suppression, scale_coords
-from yolov7.utils.datasets import letterbox
-from yolov7.utils.torch_utils import select_device
+from models.experimental import attempt_load
+from utils.general import non_max_suppression, scale_coords
+from utils.datasets import letterbox
+from utils.torch_utils import select_device
+# Select device
+device = select_device('cpu')
 
 # Load YOLOv7 model
 def load_yolov7_model(weights_path, device):
@@ -13,14 +15,27 @@ def load_yolov7_model(weights_path, device):
     return model
 
 # Preprocess frame for YOLOv7 input
+# Preprocess frame for YOLOv7 input
 def preprocess_frame(frame, img_size=640):
-    img = letterbox(frame, img_size, stride=32)[0]  # Resize while maintaining aspect ratio
-    img = img[:, :, ::-1].transpose(2, 0, 1)  # Convert BGR to RGB, shape (3,640,640)
+    if frame is None:
+        print("Error: Frame is None. Skipping frame...")
+        return None
+
+    # Resize while maintaining aspect ratio
+    img = letterbox(frame, img_size, stride=32)[0]  
+    # Check if img is valid (should not be an int)
+    if isinstance(img, int):
+        print("Error: Invalid frame data. Skipping frame...")
+        return None
+
+    img = img[:, :, ::-1].transpose(2, 0, 1)  # Convert BGR to RGB and transpose
     img = np.ascontiguousarray(img)
     img = torch.from_numpy(img).to(device).float() / 255.0  # Normalize to [0,1]
+
     if img.ndimension() == 3:
-        img = img.unsqueeze(0)  # Add batch dimension
+        img = img.unsqueeze(0)  # Add batch dimension if necessary
     return img
+
 
 # Perform object detection
 def detect_objects(model, img, conf_thres=0.25, iou_thres=0.45):
@@ -42,15 +57,12 @@ def process_detections(pred, frame, img_size):
 
 # Main function to run dual camera object detection
 def run_dual_camera_detection(weights='yolov7.pt', img_size=640):
-    # Select device
-    device = select_device('')
-    
     # Load model
-    model = load_yolov7_model(weights, device)
+    model = load_yolov7_model(weights)
     
     # Open two cameras
     cam1 = cv2.VideoCapture(0)
-    cam2 = cv2.VideoCapture(1)
+    cam2 = cv2.VideoCapture(2)
     
     if not cam1.isOpened() or not cam2.isOpened():
         print("Error: Unable to access cameras")
@@ -67,6 +79,10 @@ def run_dual_camera_detection(weights='yolov7.pt', img_size=640):
         # Preprocess frames
         img1 = preprocess_frame(frame1, img_size)
         img2 = preprocess_frame(frame2, img_size)
+
+        # Skip processing if frames are invalid
+        if img1 is None or img2 is None:
+            continue
 
         # Detect objects in both frames
         pred1 = detect_objects(model, img1)
@@ -88,6 +104,7 @@ def run_dual_camera_detection(weights='yolov7.pt', img_size=640):
     cam1.release()
     cam2.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     run_dual_camera_detection()
